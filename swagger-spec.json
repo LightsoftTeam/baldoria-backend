@@ -1,0 +1,294 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_signIn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful."
+          },
+          "401": {
+            "description": "Unauthorized."
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/authenticate": {
+      "get": {
+        "operationId": "AuthController_getAuthenticatedUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Retrieve authenticated user."
+          },
+          "401": {
+            "description": "Unauthorized."
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/users": {
+      "post": {
+        "operationId": "UsersController_create",
+        "summary": "Create a user",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The user has been successfully created."
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "get": {
+        "operationId": "UsersController_findAll",
+        "summary": "Get all clients",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The clients have been successfully retrieved."
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/users/{documentType}/{documentNumber}": {
+      "get": {
+        "operationId": "UsersController_getClient",
+        "summary": "Get a client",
+        "parameters": [
+          {
+            "name": "documentType",
+            "required": true,
+            "in": "path",
+            "description": "The type of document",
+            "example": "dni",
+            "schema": {
+              "enum": [
+                "dni",
+                "passport"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentNumber",
+            "required": true,
+            "in": "path",
+            "description": "The number of the document",
+            "example": "76767676",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The client has been successfully retrieved."
+          },
+          "404": {
+            "description": "The client was not found."
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/reservations": {
+      "post": {
+        "operationId": "ReservationsController_create",
+        "summary": "Register a reservation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The reservation has been successfully created."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "tags": [
+          "Reservations"
+        ]
+      },
+      "get": {
+        "operationId": "ReservationsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reservations"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Baldoria API",
+    "description": "Rest Api for Baldoria Corporation.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "SignInDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "The email of the user",
+            "example": "test@test.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "The password of the user",
+            "example": "password"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "dni",
+              "passport"
+            ],
+            "example": "dni",
+            "description": "Document type of client"
+          },
+          "documentNumber": {
+            "type": "string",
+            "example": "12345678"
+          },
+          "email": {
+            "type": "string",
+            "example": "test@test.com"
+          },
+          "phoneCode": {
+            "type": "string",
+            "example": "+51"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "123456789"
+          },
+          "birthdate": {
+            "type": "string",
+            "example": "1990-01-01"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "documentType",
+          "documentNumber",
+          "email",
+          "phoneCode",
+          "phoneNumber",
+          "birthdate"
+        ]
+      },
+      "CreateReservationDto": {
+        "type": "object",
+        "properties": {
+          "enterprise": {
+            "type": "string",
+            "example": "baldoria"
+          },
+          "needParking": {
+            "type": "boolean",
+            "example": false
+          },
+          "date": {
+            "type": "string",
+            "example": "2021-10-10"
+          },
+          "userId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        },
+        "required": [
+          "enterprise",
+          "needParking",
+          "date",
+          "userId"
+        ]
+      }
+    }
+  }
+}
