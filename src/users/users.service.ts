@@ -9,10 +9,12 @@ import { DateTime } from 'luxon'
 
 @Injectable()
 export class UsersService {
+
   constructor(
     @InjectModel(User)
     private readonly userContainer: Container
   ){}
+
   async create(createUserDto: CreateUserDto) {
     const user = {
       ...createUserDto,
@@ -101,11 +103,19 @@ export class UsersService {
     return resources[0];
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findByIds(ids: string[]) {
+    const querySpec = {
+      query: 'SELECT * FROM c where ARRAY_CONTAINS(@ids, c.id)',
+      parameters: [
+        {
+          name: '@ids',
+          value: ids
+        }
+      ]
+    };
+    const { resources } = await this.userContainer.items
+    .query<User>(querySpec)
+    .fetchAll();
+    return resources;
   }
 }

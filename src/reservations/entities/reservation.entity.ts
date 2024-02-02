@@ -8,11 +8,10 @@ export enum Enterprise{
 @CosmosPartitionKey('id')
 export class Reservation {
     id?: string;
-    hash: string;
     enterprise: Enterprise;
     needParking: boolean;
-    isUsed: boolean;
-    userId: string;
+    userId: string; 
+    @CosmosDateTime() usedAt?: Date;
     @CosmosDateTime() date: Date;
     @CosmosDateTime() createdAt: Date;
 }

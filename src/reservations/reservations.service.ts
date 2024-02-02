@@ -6,6 +6,7 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { InjectModel } from '@nestjs/azure-database';
 import { Reservation } from './entities/reservation.entity';
 import { UsersService } from 'src/users/users.service';
+import { GetReservationsDto } from './dto/get-reservations.dto';
 
 @Injectable()
 export class ReservationsService {
@@ -35,7 +36,6 @@ export class ReservationsService {
         }
       ]
     };
-    console.log({reservationQuerySpec: JSON.stringify(reservationQuerySpec, null, 2)})
     const { resources } = await this.reservationContainer.items.query<Reservation>(
       reservationQuerySpec
     ).fetchAll();
@@ -56,14 +56,12 @@ export class ReservationsService {
   private async createAndGetAReservation(createReservationDto: CreateReservationDto): Promise<Reservation>{
     const { userId } = createReservationDto;
     await this.userService.findOne(userId);//throw error if user not found
-    const reservation = {
+    const reservation: Reservation = {
       ...createReservationDto,
-      hash: uuid(),
-      isUsed: false,
-      needParking: createReservationDto.needParking || false,
+      needParking: createReservationDto.needParking ?? false,
       //TODO: validate date format YYYY-mm-dd
       date: new Date(createReservationDto.date),
-      createdAt: DateTime.local().minus({ hours: 5 }).toJSDate(),
+      createdAt: DateTime.local().minus({ hours: 5 }).toJSDate()
     }
     const { resource } = await this.reservationContainer.items.create<Reservation>(
       reservation
@@ -71,7 +69,63 @@ export class ReservationsService {
     return resource;
   }
 
-  findAll() {
-    return `This action returns all reservations`;
+  async findAll(getReservationsDto: GetReservationsDto) {
+    const { from, to, enterprise } = getReservationsDto;
+    const reservationQuerySpec = {
+      query: 'SELECT * FROM c WHERE c.enterprise = @enterprise and c.date >= @from and c.date <= @to',
+      parameters: [
+        {
+          name: "@enterprise",
+          value: enterprise
+        },
+        {
+          name: "@from",
+          value: from
+        },
+        {
+          name: "@to",
+          value: to
+        }
+      ]
+    };
+    const {resources: reservations} = await this.reservationContainer.items.query<Reservation>(
+      reservationQuerySpec
+    ).fetchAll();
+
+    const userIds = reservations.map(reservation => reservation.userId);
+    const users = await this.userService.findByIds(userIds);
+
+    const reservationsWithUsers = reservations.map(reservation => {
+      const user = users.find(user => user.id === reservation.userId);
+      return {
+        ...reservation,
+        user
+      }
+    });
+
+    return reservationsWithUsers;
+  }
+
+  async findOne(id: string) {
+    const reservationQuerySpec = {
+      query: 'SELECT * FROM c WHERE c.id = @id',
+      parameters: [
+        {
+          name: "@id",
+          value: id
+        }
+      ]
+    };
+    const { resources } = await this.reservationContainer.items.query<Reservation>(
+      reservationQuerySpec
+    ).fetchAll();
+    if(resources.length === 0){
+      return null;
+    }
+    return resources[0];
+  }
+  async update(id: string, reservation: Reservation) {
+    const { resource } = await this.reservationContainer.item(id).replace<Reservation>(reservation);
+    return resource;
   }
 }

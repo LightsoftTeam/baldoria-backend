@@ -3,7 +3,6 @@ import { SignInDto } from './dto/sign-in.dto';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { User } from 'src/users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { LoginResponse } from './types/login-response';
 

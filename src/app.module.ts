@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ApiTags } from '@nestjs/swagger';
 import { ReservationsModule } from './reservations/reservations.module';
 import { AzureCosmosDbModule } from '@nestjs/azure-database';
+import { CommonModule } from './common/common.module';
 
 @ApiTags('App')
 @Module({
@@ -25,6 +26,7 @@ import { AzureCosmosDbModule } from '@nestjs/azure-database';
       }),
       inject: [ConfigService],
     }),
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [AppService],

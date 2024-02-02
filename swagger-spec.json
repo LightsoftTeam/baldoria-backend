@@ -169,10 +169,101 @@
       },
       "get": {
         "operationId": "ReservationsController_findAll",
-        "parameters": [],
+        "summary": "Get reservations by enterprise and dates range",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "example": "2024-03-01",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "example": "2024-03-31",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "enterprise",
+            "required": true,
+            "in": "query",
+            "example": "enterprise",
+            "schema": {
+              "enum": [
+                "baldoria",
+                "lov"
+              ],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "The reservations has been successfully retrieved."
+          }
+        },
+        "tags": [
+          "Reservations"
+        ]
+      }
+    },
+    "/api/reservations/use": {
+      "post": {
+        "operationId": "ReservationsController_use",
+        "summary": "Use Reservation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Reservation Id",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UseReservationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The reservation has been successfully used."
+          },
+          "400": {
+            "description": "Reservation already used or date is in the past.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "enum": [
+                        "ALREADY_USED",
+                        "DATE_IN_PAST"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Reservation not found."
           }
         },
         "tags": [
@@ -287,6 +378,18 @@
           "needParking",
           "date",
           "userId"
+        ]
+      },
+      "UseReservationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        },
+        "required": [
+          "id"
         ]
       }
     }
