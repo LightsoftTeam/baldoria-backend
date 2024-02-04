@@ -28,6 +28,8 @@ export class User {
     phoneNumber: string;
     role: Role;
     reservations: Reservation[];
+    lovCount: number;
+    baldoriaCount: number;
     @CosmosDateTime() birthdate: Date;
     @CosmosDateTime() createdAt: Date;
 }

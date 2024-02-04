@@ -1,16 +1,19 @@
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectModel } from '@nestjs/azure-database';
 import type { Container } from '@azure/cosmos';
-import { Reservation, Role, User } from './entities/user.entity';
+import { Enterprise, Reservation, Role, User } from './entities/user.entity';
 import { GetClientDto } from './dto/get-client.dto';
 import { DateTime } from 'luxon';
 import { GetUsersDto, SortBy } from './dto/get-users.dto';
 import { Sort } from 'src/common/interfaces/sort.enum';
-import { Enterprise } from 'src/reservations/entities/reservation.entity';
-import { ReservationsService } from 'src/reservations/reservations.service';
 import { AddReservationDto } from './dto/add-reservation.dto';
+import { DocumentFormat } from 'src/common/helpers/document-format.helper';
+
+export const BASIC_FIELDS = [
+  'c.id', 'c.firstName', 'c.lastName', 'c.documentType', 'c.documentNumber', 'c.email', 'c.phoneCode', 'c.phoneNumber', 'c.role'
+]
 
 @Injectable()
 export class UsersService {
@@ -18,8 +21,6 @@ export class UsersService {
   constructor(
     @InjectModel(User)
     private readonly userContainer: Container,
-    @Inject(forwardRef(() => ReservationsService))
-    private readonly reservationsService: ReservationsService,
   ) { }
 
   async create(createUserDto: CreateUserDto) {
@@ -27,6 +28,8 @@ export class UsersService {
       ...createUserDto,
       role: Role.CLIENT,
       reservations: [],
+      lovCount: 0,
+      baldoriaCount: 0,
       //TODO: validate birthdate format YYYY-mm-dd
       birthdate: new Date(createUserDto.birthdate),
       createdAt: DateTime.local().minus({ hours: 5 }).toJSDate(),
@@ -51,8 +54,8 @@ export class UsersService {
     const offset = (page - 1) * limit;
 
     const whereClause = `
-        where c.role = "client" 
-        and contains(c.firstName, @search, true) or contains(c.lastName, @search, true) or contains(c.email, @search, true) 
+        where c.role = "client"
+        and (contains(c.firstName, @search, true) or contains(c.lastName, @search, true) or contains(c.email, @search, true))
     `;
 
     const countQuerySpec = {
@@ -70,7 +73,7 @@ export class UsersService {
 
     const itemsQuerySpec = {
       query: `
-        SELECT * FROM c 
+        SELECT ${BASIC_FIELDS.join(',')},c.lovCount, c.baldoriaCount FROM c 
         ${whereClause}
         order by c.${sortBy} ${sort} 
         offset @offset limit @limit
@@ -100,29 +103,8 @@ export class UsersService {
 
     const [items, count] = await Promise.all([itemsPromise, countPromise]);
 
-    const users = items.resources;
+    const data = items.resources;
     const total = count.resources[0];
-
-    const userIds = users.map(user => user.id);
-
-    console.log({userIds})
-
-    const reservationsByUser = await this.reservationsService.getNumberOfReservationsByUserId(userIds);
-
-    const data = users.map(user => {
-      const userReservations = reservationsByUser.filter(reservation => reservation.userId === user.id);
-      const reservationsCount = Object.values(Enterprise).reduce((acc, enterprise) => {
-        const enterpriseReservations = userReservations.find(reservation => reservation.enterprise === enterprise);
-        return {
-          ...acc,
-          [enterprise]: enterpriseReservations ? enterpriseReservations.total : 0
-        }
-      }, {} as Record<Enterprise, number>);
-      return {
-        ...user,
-        reservationsInfo: reservationsCount
-      }
-    });
 
     return {
       data,
@@ -134,10 +116,12 @@ export class UsersService {
     };
   }
 
-  async getClient(getClientDto: GetClientDto) {
+  async getClient(getClientDto: GetClientDto): Promise<Partial<User>> {
     const { documentType, documentNumber } = getClientDto;
     const querySpec = {
-      query: 'SELECT * FROM c where c.role = "client" and c.documentType = @documentType and c.documentNumber = @documentNumber',
+      query: `
+        SELECT ${BASIC_FIELDS.join(',')}
+        FROM c where c.role = "client" and c.documentType = @documentType and c.documentNumber = @documentNumber`,
       parameters: [
         {
           name: '@documentType',
@@ -159,8 +143,6 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    // const {resource: user} = await this.userContainer.item(id).read<User>();
-    // return user;
     const querySpec = {
       query: 'SELECT * FROM c where c.id = @id and c.role = "client"',
       parameters: [
@@ -214,57 +196,176 @@ export class UsersService {
     return resources;
   }
 
+  async getReservations({ enterprise, from, to }: {
+    enterprise: Enterprise,
+    from: string,
+    to: string
+  }) {
+    const reservationQuerySpec = {
+      query: `
+        SELECT c as user
+        FROM c 
+        JOIN r in c.reservations 
+        where r.createdAt >= @from and r.createdAt <= @to and r.enterprise = @enterprise
+      `,
+      parameters: [
+        {
+          name: "@enterprise",
+          value: enterprise
+        },
+        {
+          name: "@from",
+          value: new Date(from).toISOString()
+        },
+        {
+          name: "@to",
+          value: new Date(to).toISOString()
+        }
+      ],
+    };
+    const { resources } = await this.userContainer.items.query<{
+      "user": User,
+    }>(
+      reservationQuerySpec
+    ).fetchAll();
+
+    const users = resources.map(resource => resource.user);
+    const reservations = users.flatMap(({ reservations, ...user }) => {
+      const filteredReservations = reservations.filter(reservation => reservation.enterprise === enterprise);
+      const filteredReservationsWithUser = filteredReservations.map(reservation => {
+        return {
+          ...reservation,
+          user: DocumentFormat.cleanDocument(user, ['password']),
+        }
+      }
+      );
+      return filteredReservationsWithUser;
+    });
+    return reservations;
+  }
+
+  async getReservationById(reservationId: string): Promise<Reservation | null> {
+    const querySpec = {
+      query: `
+        select value r 
+        from c join r in c.reservations
+        where r.id = @reservationId
+      `,
+      parameters: [
+        {
+          name: "@reservationId",
+          value: reservationId
+        }
+      ]
+    };
+    const { resources } = await this.userContainer.items.query<Reservation>(
+      querySpec
+    ).fetchAll();
+    if (resources.length === 0) {
+      return null;
+    }
+    return resources[0];
+  }
+
+  async getReservationsByUserId(userId: string) {
+    const user = await this.findOne(userId);
+    return user.reservations;
+  }
+
   async addReservation(userId: string, addReservationDto: AddReservationDto) {
-   //TODO: validate date format YYYY-mm-dd
-   const { date, enterprise } = addReservationDto;
-   const userQuerySpec = {
-     query: `SELECT * from c where c.id = @userId`,
-     parameters: [
-       {
-         name: "@userId",
-         value: userId
-       }
-     ]
-   };
-   const { resources } = await this.userContainer.items.query(
-     userQuerySpec
-   ).fetchAll();
-   if(resources.length === 0){
+    //TODO: validate date format YYYY-mm-dd
+    const { date, enterprise } = addReservationDto;
+    const userQuerySpec = {
+      query: `SELECT * from c where c.id = @userId`,
+      parameters: [
+        {
+          name: "@userId",
+          value: userId
+        }
+      ]
+    };
+    const { resources } = await this.userContainer.items.query(
+      userQuerySpec
+    ).fetchAll();
+    if (resources.length === 0) {
       throw new NotFoundException('User not found');
     }
-   const user = resources[0];
-   const existReservation = user.reservations.find((reservation: Reservation) => {
-     return reservation.date.toString().split('T')[0] === date && reservation.enterprise === enterprise;
-   });
-   if(!existReservation){
-     const newReservation = await this.addReservationToUser(userId, addReservationDto);
-     return {
-       reservation: newReservation,
-       isNew: true
-     }
-   }
+    const user = resources[0];
+    const existReservation = user.reservations.find((reservation: Reservation) => {
+      return reservation.date.toString().split('T')[0] === date && reservation.enterprise === enterprise;
+    });
+    if (!existReservation) {
+      const newReservation = await this.addReservationToUser(userId, addReservationDto);
+      return {
+        reservation: newReservation,
+        isNew: true
+      }
+    }
 
     return {
       reservation: existReservation,
       isNew: false
     }
- }
+  }
 
- private async addReservationToUser(userId: string, addReservationDto: AddReservationDto): Promise<Reservation>{
-   const user = await this.findOne(userId);//throw error if user not found
-   const reservation: Reservation = {
+  private async addReservationToUser(userId: string, addReservationDto: AddReservationDto): Promise<Reservation> {
+    const user = await this.findOne(userId);//throw error if user not found
+    const reservation: Reservation = {
       id: uuid(),
-     ...addReservationDto,
-     needParking: addReservationDto.needParking ?? false,
-     //TODO: validate date format YYYY-mm-dd
-     date: new Date(addReservationDto.date),
-     createdAt: DateTime.local().minus({ hours: 5 }).toJSDate()
-   }
-   const newUser = {
+      ...addReservationDto,
+      needParking: addReservationDto.needParking ?? false,
+      //TODO: validate date format YYYY-mm-dd
+      date: new Date(addReservationDto.date),
+      createdAt: DateTime.local().minus({ hours: 5 }).toJSDate()
+    }
+    const newReservations = [...user.reservations, reservation];
+    const newUser = {
       ...user,
-      reservations: [...user.reservations, reservation]
-   }
+      reservations: newReservations,
+      lovCount: newReservations.filter(reservation => reservation.enterprise === Enterprise.LOV).length,
+      baldoriaCount: newReservations.filter(reservation => reservation.enterprise === Enterprise.BALDORIA).length
+    }
     await this.userContainer.item(userId).replace(newUser);
     return reservation;
- }
+  }
+
+  async useReservation(reservationId: string) {
+    const user = await this.getUserByReservationId(reservationId);
+    const newReservations = user.reservations.map(reservation => {
+      if (reservation.id === reservationId) {
+        return {
+          ...reservation,
+          usedAt: DateTime.local().minus({ hours: 5 }).toJSDate()
+        }
+      }
+      return reservation;
+    }
+    );
+    const { resource } = await this.userContainer.item(user.id).replace<User>({
+      ...user,
+      reservations: newReservations
+    });
+    return resource;
+  }
+
+  private async getUserByReservationId(reservationId: string) {
+    const { resources } = await this.userContainer.items.query<User>({
+      query: `
+        SELECT c 
+        FROM c 
+        JOIN r in c.reservations 
+        where r.id = @reservationId
+      `,
+      parameters: [
+        {
+          name: "@reservationId",
+          value: reservationId
+        }
+      ]
+    }).fetchAll();
+    if (resources.length === 0) {
+      return null;
+    }
+    return resources[0];
+  }
 }

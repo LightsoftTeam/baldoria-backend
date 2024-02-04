@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, isBoolean } from "class-validator";
-import { Enterprise } from "../../reservations/entities/reservation.entity";
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { Enterprise } from "../entities/user.entity";
 
 export class AddReservationDto {
     @ApiProperty({

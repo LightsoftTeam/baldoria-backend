@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsNotEmpty, IsString } from "class-validator";
-import { Enterprise } from "../entities/reservation.entity";
+import { Enterprise } from "src/users/entities/user.entity";
 
 export class GetReservationsDto {
     @ApiProperty({

@@ -9,8 +9,7 @@ import { ReservationsModule } from 'src/reservations/reservations.module';
   controllers: [UsersController],
   providers: [UsersService],
   imports: [
-    AzureCosmosDbModule.forFeature([{ dto: User }]),
-    forwardRef(() => ReservationsModule)
+    AzureCosmosDbModule.forFeature([{ dto: User }])
   ],
   exports: [
     UsersService

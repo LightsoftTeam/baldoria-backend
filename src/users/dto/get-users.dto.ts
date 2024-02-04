@@ -5,7 +5,9 @@ import { Sort } from "src/common/interfaces/sort.enum";
 export enum SortBy {
     FIRST_NAME = 'firstName',
     EMAIL = 'email',
-    CREATED_AT = 'createdAt'
+    CREATED_AT = 'createdAt',
+    LOV_COUNT = 'lovCount',
+    BALDORIA_COUNT = 'baldoriaCount',
 }
 
 export class GetUsersDto {

@@ -1,10 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { GetClientDto } from './dto/get-client.dto';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { DocumentType } from './entities/user.entity';
 import { GetUsersDto } from './dto/get-users.dto';
 import { AddReservationDto } from './dto/add-reservation.dto';
 
@@ -41,7 +39,7 @@ export class UsersController {
     };
   }
 
-  @ApiOperation({ summary: 'Get a client' })
+  @ApiOperation({ summary: 'Get a client by document' })
   @ApiResponse({
     status: 200,
     description: 'The client has been successfully retrieved.',
@@ -50,7 +48,7 @@ export class UsersController {
     status: 404,
     description: 'The client was not found.'
   })
-  @Get(':documentType/:documentNumber')
+  @Get('/by-document/:documentType/:documentNumber')
   async getClient(@Param() getClientDto: GetClientDto) {
     const client = await this.userService.getClient(getClientDto);
     if (!client) {
@@ -58,6 +56,13 @@ export class UsersController {
     }
     delete client.password;
     return client;
+  }
+
+  @ApiOperation({ summary: 'Retrieve user reservations' })
+  @ApiParam({ name: 'id', description: 'The user id', example: '2cac3618-484b-414c-82fd-9c15350aa27f' })
+  @Get(':id/reservations')
+  async getReservations(@Param('id') id: string){
+    return this.userService.getReservationsByUserId(id);
   }
 
   @ApiOperation({ summary: 'Add a reservation to user' })
