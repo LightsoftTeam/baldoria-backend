@@ -10,6 +10,11 @@ export enum Role {
     CLIENT = 'client',
 }
 
+export enum Enterprise{
+    BALDORIA = 'baldoria',
+    LOV = 'lov',
+}
+
 @CosmosPartitionKey('id')
 export class User {
     id?: string;
@@ -22,6 +27,16 @@ export class User {
     phoneCode: string;
     phoneNumber: string;
     role: Role;
+    reservations: Reservation[];
     @CosmosDateTime() birthdate: Date;
+    @CosmosDateTime() createdAt: Date;
+}
+
+export class Reservation {
+    id: string;
+    enterprise: Enterprise;
+    needParking: boolean;
+    @CosmosDateTime() usedAt?: Date;
+    @CosmosDateTime() date: Date;
     @CosmosDateTime() createdAt: Date;
 }

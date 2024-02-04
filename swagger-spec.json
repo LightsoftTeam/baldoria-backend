@@ -86,7 +86,63 @@
       "get": {
         "operationId": "UsersController_findAll",
         "summary": "Get all clients",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "description": "Page number",
+            "example": 1,
+            "schema": {
+              "default": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "description": "Limit",
+            "example": 10,
+            "schema": {
+              "default": 10,
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "description": "Search",
+            "example": "John",
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "description": "Sort",
+            "example": "asc",
+            "schema": {
+              "default": "asc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": true,
+            "in": "query",
+            "description": "Sort by",
+            "example": "name",
+            "schema": {
+              "default": "name",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "The clients have been successfully retrieved."
@@ -140,134 +196,31 @@
         ]
       }
     },
-    "/api/reservations": {
+    "/api/users/{id}/reservations": {
       "post": {
-        "operationId": "ReservationsController_create",
-        "summary": "Register a reservation",
+        "operationId": "UsersController_addReservation",
+        "summary": "Add a reservation to user",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateReservationDto"
+                "$ref": "#/components/schemas/AddReservationDto"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "The reservation has been successfully created."
+            "description": "The reservation has been successfully added."
           },
           "404": {
-            "description": "User not found."
+            "description": "The user was not found."
           }
         },
         "tags": [
-          "Reservations"
-        ]
-      },
-      "get": {
-        "operationId": "ReservationsController_findAll",
-        "summary": "Get reservations by enterprise and dates range",
-        "parameters": [
-          {
-            "name": "from",
-            "required": true,
-            "in": "query",
-            "example": "2024-03-01",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": true,
-            "in": "query",
-            "example": "2024-03-31",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "enterprise",
-            "required": true,
-            "in": "query",
-            "example": "enterprise",
-            "schema": {
-              "enum": [
-                "baldoria",
-                "lov"
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The reservations has been successfully retrieved."
-          }
-        },
-        "tags": [
-          "Reservations"
-        ]
-      }
-    },
-    "/api/reservations/use": {
-      "post": {
-        "operationId": "ReservationsController_use",
-        "summary": "Use Reservation",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Reservation Id",
-            "schema": {}
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UseReservationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The reservation has been successfully used."
-          },
-          "400": {
-            "description": "Reservation already used or date is in the past.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "enum": [
-                        "ALREADY_USED",
-                        "DATE_IN_PAST"
-                      ]
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Reservation not found."
-          }
-        },
-        "tags": [
-          "Reservations"
+          "Users"
         ]
       }
     }
@@ -353,7 +306,7 @@
           "birthdate"
         ]
       },
-      "CreateReservationDto": {
+      "AddReservationDto": {
         "type": "object",
         "properties": {
           "enterprise": {
@@ -367,29 +320,12 @@
           "date": {
             "type": "string",
             "example": "2021-10-10"
-          },
-          "userId": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         },
         "required": [
           "enterprise",
           "needParking",
-          "date",
-          "userId"
-        ]
-      },
-      "UseReservationDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          }
-        },
-        "required": [
-          "id"
+          "date"
         ]
       }
     }

@@ -5,6 +5,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { GetClientDto } from './dto/get-client.dto';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DocumentType } from './entities/user.entity';
+import { GetUsersDto } from './dto/get-users.dto';
+import { AddReservationDto } from './dto/add-reservation.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -27,12 +29,16 @@ export class UsersController {
     description: 'The clients have been successfully retrieved.',
   })
   @Get()
-  async findAll() {
-    const users = await this.userService.findAll();
-    return users.map(user => {
+  async findAll(@Query() getUsersDto: GetUsersDto){
+    const {data, ...rest} = await this.userService.findAll(getUsersDto);
+    const formattedData = data.map(user => {
       delete user.password;
       return user;
     });
+    return {
+      data: formattedData,
+      ...rest
+    };
   }
 
   @ApiOperation({ summary: 'Get a client' })
@@ -52,5 +58,19 @@ export class UsersController {
     }
     delete client.password;
     return client;
+  }
+
+  @ApiOperation({ summary: 'Add a reservation to user' })
+  @ApiResponse({
+    status: 201,
+    description: 'The reservation has been successfully added.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'The user was not found.'
+  })
+  @Post(':id/reservations')
+  async addReservation(@Param('id') id, @Body() addReservationDto: AddReservationDto){
+    return this.userService.addReservation(id, addReservationDto);
   }
 }

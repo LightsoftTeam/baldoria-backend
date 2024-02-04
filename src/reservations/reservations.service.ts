@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import type { Container } from '@azure/cosmos';
 import { DateTime } from 'luxon';
 import { v4 as uuid } from "uuid";
@@ -13,6 +13,7 @@ export class ReservationsService {
   constructor(
     @InjectModel(Reservation)
     private readonly reservationContainer: Container,
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService
   ) {}
 
@@ -124,6 +125,33 @@ export class ReservationsService {
     }
     return resources[0];
   }
+
+  async getNumberOfReservationsByUserId(userIds: string[]): Promise<{
+    total: number,
+    userId: string,
+    enterprise: string
+  }[]>{
+    const querySpec = {
+      query: `
+        SELECT count(c.userId) as total, c.userId, c.enterprise 
+        FROM c 
+        where ARRAY_CONTAINS(@userIds, c.userId)
+        GROUP BY c.enterprise, c.userId
+      `,
+      parameters: [
+        {
+          name: '@userIds',
+          value: userIds
+        }
+      ]
+    };
+
+    const { resources } = await this.reservationContainer.items
+      .query(querySpec)
+      .fetchAll();
+    return  resources;
+  }
+
   async update(id: string, reservation: Reservation) {
     const { resource } = await this.reservationContainer.item(id).replace<Reservation>(reservation);
     return resource;

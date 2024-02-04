@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { ReservationsController } from './reservations.controller';
 import { Reservation } from './entities/reservation.entity';
@@ -10,7 +10,8 @@ import { UsersModule } from 'src/users/users.module';
   providers: [ReservationsService],
   imports: [
     AzureCosmosDbModule.forFeature([{ dto: Reservation }]),
-    UsersModule
+    forwardRef(() => UsersModule)
   ],
+  exports: [ReservationsService]
 })
 export class ReservationsModule {}
