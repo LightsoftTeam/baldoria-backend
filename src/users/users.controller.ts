@@ -69,8 +69,9 @@ export class UsersController {
     status: 404,
     description: 'The user was not found.'
   })
+  @ApiParam({ name: 'id', description: 'The user id' })
   @Post(':id/reservations')
-  async addReservation(@Param('id') id, @Body() addReservationDto: AddReservationDto){
+  async addReservation(@Param('id') id: string, @Body() addReservationDto: AddReservationDto){
     return this.userService.addReservation(id, addReservationDto);
   }
 }
