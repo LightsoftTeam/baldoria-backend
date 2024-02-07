@@ -175,8 +175,9 @@ export class UsersService {
   }
 
   async findOne(id: string) {
+    //TODO: review if its necesary to remove password and reservations. Role
     const querySpec = {
-      query: 'SELECT * FROM c where c.id = @id and c.role = "client"',
+      query: 'SELECT * FROM c where c.id = @id',
       parameters: [
         {
           name: '@id',
