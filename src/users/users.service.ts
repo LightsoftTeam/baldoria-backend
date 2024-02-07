@@ -12,7 +12,7 @@ import { AddReservationDto } from './dto/add-reservation.dto';
 import { DocumentFormat } from 'src/common/helpers/document-format.helper';
 
 export const BASIC_FIELDS = [
-  'c.id', 'c.firstName', 'c.lastName', 'c.documentType', 'c.documentNumber', 'c.email', 'c.phoneCode', 'c.phoneNumber', 'c.role'
+  'c.id', 'c.firstName', 'c.lastName', 'c.documentType', 'c.birthdate', 'c.documentNumber', 'c.email', 'c.phoneCode', 'c.phoneNumber', 'c.role'
 ]
 
 @Injectable()
@@ -178,22 +178,6 @@ export class UsersService {
       return null;
     }
     return resources[0];
-  }
-
-  async findByIds(ids: string[]) {
-    const querySpec = {
-      query: 'SELECT * FROM c where ARRAY_CONTAINS(@ids, c.id)',
-      parameters: [
-        {
-          name: '@ids',
-          value: ids
-        }
-      ]
-    };
-    const { resources } = await this.userContainer.items
-      .query<User>(querySpec)
-      .fetchAll();
-    return resources;
   }
 
   async getReservations({ enterprise, from, to }: {
