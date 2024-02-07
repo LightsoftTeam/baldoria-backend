@@ -22,7 +22,7 @@ export class User {
     lastName: string;
     documentType: DocumentType;
     documentNumber: string;
-    email: string;
+    email: string; 
     password?: string;
     phoneCode: string;
     phoneNumber: string;

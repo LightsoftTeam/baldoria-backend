@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Query } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectModel } from '@nestjs/azure-database';
@@ -223,7 +223,7 @@ export class UsersService {
         SELECT c as user
         FROM c 
         JOIN r in c.reservations 
-        where r.createdAt >= @from and r.createdAt <= @to and r.enterprise = @enterprise
+        where r.date >= @from and r.date <= @to and r.enterprise = @enterprise
       `,
       parameters: [
         {
