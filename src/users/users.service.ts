@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Query } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectModel } from '@nestjs/azure-database';
@@ -24,6 +24,38 @@ export class UsersService {
   ) { }
 
   async create(createUserDto: CreateUserDto) {
+    const { documentNumber, documentType } = createUserDto;
+    const querySpec = {
+      query: 'SELECT * FROM c where c.documentNumber = @documentNumber and c.documentType = @documentType',
+      parameters: [
+        {
+          name: '@documentNumber',
+          value: documentNumber
+        },
+        {
+          name: '@documentType',
+          value: documentType
+        }
+      ]
+    };
+    const users = await this.userContainer.items
+      .query<User>(querySpec)
+      .fetchAll();
+    if (users.resources.length > 0) {
+      const existingUser = users.resources[0];
+      const {birthdate, email, firstName, lastName, phoneCode, phoneNumber} = createUserDto;
+      const updatedUser = {
+        ...existingUser,
+        birthdate: new Date(birthdate),
+        email,
+        firstName,
+        lastName,
+        phoneCode,
+        phoneNumber
+      }
+      const {resource} = await this.userContainer.item(existingUser.id).replace<User>(updatedUser);
+      return DocumentFormat.cleanDocument(resource, ['password', 'reservations']);
+    }
     const user = {
       ...createUserDto,
       role: Role.CLIENT,
@@ -37,7 +69,7 @@ export class UsersService {
     const { resource } = await this.userContainer.items.create<User>(
       user
     );
-    return resource;
+    return DocumentFormat.cleanDocument(resource, ['password', 'reservations']);
   }
 
   async findAll(getUsersDto: GetUsersDto): Promise<{
