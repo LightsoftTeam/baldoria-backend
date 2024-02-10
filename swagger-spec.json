@@ -348,6 +348,34 @@
           "Reservations"
         ]
       }
+    },
+    "/api/reservations/{id}/qr-info": {
+      "get": {
+        "operationId": "ReservationsController_getQrInfo",
+        "summary": "Get reservation qr info",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Reservation Id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The reservation qr info has been successfully retrieved."
+          },
+          "404": {
+            "description": "Reservation not found."
+          }
+        },
+        "tags": [
+          "Reservations"
+        ]
+      }
     }
   },
   "info": {

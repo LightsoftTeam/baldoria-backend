@@ -347,26 +347,29 @@ export class UsersService {
   }
 
   async useReservation(reservationId: string) {
+    const usedAt = DateTime.local().minus({ hours: 5 }).toJSDate();
     const user = await this.getUserByReservationId(reservationId);
     const newReservations = user.reservations.map(reservation => {
       if (reservation.id === reservationId) {
         return {
           ...reservation,
-          usedAt: DateTime.local().minus({ hours: 5 }).toJSDate()
+          usedAt
         }
       }
       return reservation;
     }
     );
-    const { resource } = await this.userContainer.item(user.id).replace<User>({
+    await this.userContainer.item(user.id).replace<User>({
       ...user,
       reservations: newReservations
     });
-    return resource;
+    return {usedAt};
   }
 
-  private async getUserByReservationId(reservationId: string) {
-    const { resources } = await this.userContainer.items.query<User>({
+  async getUserByReservationId(reservationId: string): Promise<User | null>{
+    const { resources } = await this.userContainer.items.query<{
+      c: User
+    }>({
       query: `
         SELECT c 
         FROM c 
@@ -383,6 +386,6 @@ export class UsersService {
     if (resources.length === 0) {
       return null;
     }
-    return resources[0];
+    return resources[0].c;
   }
 }
