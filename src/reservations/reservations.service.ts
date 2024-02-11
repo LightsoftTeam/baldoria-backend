@@ -35,9 +35,11 @@ export class ReservationsService {
       throw new NotFoundException('Item not found');
     }
     const reservationsState = await this.getRevervationStatus(id);
+    const reservation = user.reservations.find(reservation => reservation.id === id);
     return {
       user: DocumentFormat.cleanDocument(user, ['reservations']),
-      reservationsState
+      reservationsState,
+      reservation
     };
   }
 
