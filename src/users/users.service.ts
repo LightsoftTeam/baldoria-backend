@@ -218,6 +218,8 @@ export class UsersService {
     from: string,
     to: string
   }) {
+    const fromIso = new Date(from).toISOString();
+    const toIso = new Date(to).toISOString();
     const reservationQuerySpec = {
       query: `
         SELECT c as user
@@ -232,11 +234,11 @@ export class UsersService {
         },
         {
           name: "@from",
-          value: new Date(from).toISOString()
+          value: fromIso
         },
         {
           name: "@to",
-          value: new Date(to).toISOString()
+          value: toIso
         }
       ],
     };
@@ -258,7 +260,8 @@ export class UsersService {
       );
       return filteredReservationsWithUser;
     });
-    return reservations;
+    console.log(reservations.length)
+    return reservations.filter(reservation => reservation.date.toString() >= fromIso && reservation.date.toString() <= toIso);
   }
 
   async getReservationById(reservationId: string): Promise<Reservation | null> {
