@@ -6,14 +6,17 @@ import { UseReservationError, useReservationErrors } from './constants/use-reser
 import { DateTime } from 'luxon';
 import { ErrorApp } from 'src/common/interfaces/error-app.interface';
 import { DocumentFormat } from 'src/common/helpers/document-format.helper';
+import { ApplicationLoggerService } from 'src/common/services/application-logger.service';
 
 @Injectable()
 export class ReservationsService {
   constructor(
-    private readonly userService: UsersService
+    private readonly userService: UsersService,
+    private readonly logger: ApplicationLoggerService
   ) { }
 
   async findAll(getReservationsDto: GetReservationsDto) {
+    this.logger.log('Getting reservations');
     const { from, to, enterprise } = getReservationsDto;
     console.log({ from: new Date(from).toISOString() })
     return this.userService.getReservations({from, to, enterprise});
