@@ -10,6 +10,7 @@ import { GetUsersDto, SortBy } from './dto/get-users.dto';
 import { Sort } from 'src/common/interfaces/sort.enum';
 import { AddReservationDto } from './dto/add-reservation.dto';
 import { DocumentFormat } from 'src/common/helpers/document-format.helper';
+import { ApplicationLoggerService } from 'src/common/services/application-logger.service';
 
 export const BASIC_FIELDS = [
   'c.id', 'c.firstName', 'c.lastName', 'c.documentType', 'c.birthdate', 'c.documentNumber', 'c.email', 'c.phoneCode', 'c.phoneNumber', 'c.role'
@@ -21,9 +22,11 @@ export class UsersService {
   constructor(
     @InjectModel(User)
     private readonly userContainer: Container,
+    private readonly logger: ApplicationLoggerService
   ) { }
 
   async create(createUserDto: CreateUserDto) {
+    this.logger.debug(`createUserDto ${JSON.stringify(createUserDto)}`);
     const { documentNumber, documentType } = createUserDto;
     const querySpec = {
       query: 'SELECT * FROM c where c.documentNumber = @documentNumber and c.documentType = @documentType',
@@ -42,6 +45,7 @@ export class UsersService {
       .query<User>(querySpec)
       .fetchAll();
     if (users.resources.length > 0) {
+      this.logger.log(`User with documentNumber ${documentNumber} and documentType ${documentType} already exists`);
       const existingUser = users.resources[0];
       const {birthdate, email, firstName, lastName, phoneCode, phoneNumber} = createUserDto;
       const updatedUser = {
@@ -56,6 +60,7 @@ export class UsersService {
       const {resource} = await this.userContainer.item(existingUser.id).replace<User>(updatedUser);
       return DocumentFormat.cleanDocument(resource, ['password', 'reservations']);
     }
+    this.logger.log(`Creating user with documentNumber ${documentNumber} and documentType ${documentType}`);
     const user = {
       ...createUserDto,
       role: Role.CLIENT,
@@ -150,6 +155,7 @@ export class UsersService {
 
   async getClient(getClientDto: GetClientDto): Promise<Partial<User>> {
     const { documentType, documentNumber } = getClientDto;
+    this.logger.debug(`getClientDto ${JSON.stringify(getClientDto)}`);
     const querySpec = {
       query: `
         SELECT ${BASIC_FIELDS.join(',')}
@@ -293,6 +299,7 @@ export class UsersService {
   }
 
   async addReservation(userId: string, addReservationDto: AddReservationDto) {
+    this.logger.debug(`addReservationDto ${JSON.stringify(addReservationDto)}`);
     //TODO: validate date format YYYY-mm-dd
     const { date, enterprise } = addReservationDto;
     const userQuerySpec = {
@@ -329,6 +336,7 @@ export class UsersService {
   }
 
   private async addReservationToUser(userId: string, addReservationDto: AddReservationDto): Promise<Reservation> {
+    this.logger.debug(`addReservationToUser ${userId}`);
     const user = await this.findOne(userId);//throw error if user not found
     const reservation: Reservation = {
       id: uuid(),
@@ -350,6 +358,7 @@ export class UsersService {
   }
 
   async useReservation(reservationId: string) {
+    this.logger.debug(`useReservation ${reservationId}`);
     const usedAt = DateTime.local().minus({ hours: 5 }).toJSDate();
     const user = await this.getUserByReservationId(reservationId);
     const newReservations = user.reservations.map(reservation => {
@@ -370,6 +379,7 @@ export class UsersService {
   }
 
   async getUserByReservationId(reservationId: string): Promise<User | null>{
+    this.logger.debug(`getUserByReservationId ${reservationId}`);
     const { resources } = await this.userContainer.items.query<{
       c: User
     }>({
@@ -387,6 +397,7 @@ export class UsersService {
       ]
     }).fetchAll();
     if (resources.length === 0) {
+      this.logger.debug(`getUserByReservationId: ${reservationId} not found`);
       return null;
     }
     return resources[0].c;
