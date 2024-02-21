@@ -7,5 +7,6 @@
         "Content-Type": "application/json"
       }
     }
-  }
+  },
+  "functionTimeout": "00:08:00"
 }
