@@ -5,11 +5,15 @@ import { GetClientDto } from './dto/get-client.dto';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUsersDto } from './dto/get-users.dto';
 import { AddReservationDto } from './dto/add-reservation.dto';
+import { ApplicationLoggerService } from 'src/common/services/application-logger.service';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) { }
+  constructor(
+    private readonly userService: UsersService,
+    private readonly logger: ApplicationLoggerService
+    ) { }
 
   @ApiOperation({ summary: 'Create a user' })
   @ApiResponse({
@@ -18,6 +22,7 @@ export class UsersController {
   })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
+    this.logger.log('create UserController');
     return this.userService.create(createUserDto);
   }
 

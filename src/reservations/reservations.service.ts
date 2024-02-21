@@ -28,10 +28,12 @@ export class ReservationsService {
   // }
 
   async use(id: string) {
+    this.logger.log('Using reservation');
     return this.userService.useReservation(id);
   }
 
   async getQrInfo(id: string) {
+    this.logger.log('Getting qr info');
     const user = await this.userService.getUserByReservationId(id);
     if(!user){
       console.log('User not found by reservation id');
@@ -50,6 +52,7 @@ export class ReservationsService {
     isValid: boolean;
     error: ErrorApp | null;
   }> {
+    this.logger.log('Getting reservation status');
     const reservation = await this.userService.getReservationById(reservationId);
     if(!reservation){
       throw new NotFoundException('Reservation not found');
