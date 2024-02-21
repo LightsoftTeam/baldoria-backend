@@ -32,16 +32,13 @@ export class UsersController {
     description: 'The clients have been successfully retrieved.',
   })
   @Get()
-  async findAll(@Query() getUsersDto: GetUsersDto){
-    const {data, ...rest} = await this.userService.findAll(getUsersDto);
+  async findAll(){
+    const data = await this.userService.findAll();
     const formattedData = data.map(user => {
       delete user.password;
       return user;
     });
-    return {
-      data: formattedData,
-      ...rest
-    };
+    return formattedData;
   }
 
   @ApiOperation({ summary: 'Get a client by document' })

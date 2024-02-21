@@ -17,9 +17,9 @@ export class ReservationsService {
 
   async findAll(getReservationsDto: GetReservationsDto) {
     this.logger.log('Getting reservations');
-    const { from, to, enterprise } = getReservationsDto;
-    console.log({ from: new Date(from).toISOString() })
-    return this.userService.getReservations({from, to, enterprise});
+    const { date, enterprise } = getReservationsDto;
+    this.logger.log(`getReservationsDto ${JSON.stringify(getReservationsDto)}`);
+    return this.userService.getReservations({date, enterprise});
   }
 
   // async findOne(id: string): Promise<Reservation | null> {

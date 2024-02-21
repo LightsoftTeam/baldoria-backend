@@ -77,80 +77,25 @@ export class UsersService {
     return DocumentFormat.cleanDocument(resource, ['password', 'reservations']);
   }
 
-  async findAll(getUsersDto: GetUsersDto): Promise<{
-    data: User[],
-    meta: {
-      page: number,
-      limit: number,
-      total: number
-    }
-  }> {
-    const { page: pageString = '1', limit: limitString = '10', search = '', sort = Sort.DESC, sortBy = SortBy.CREATED_AT } = getUsersDto;
-    const page = parseInt(pageString);
-    const limit = parseInt(limitString);
-    const offset = (page - 1) * limit;
-
-    const whereClause = `
-        where c.role = "client"
-        and (contains(c.firstName, @search, true) or contains(c.lastName, @search, true) or contains(c.email, @search, true))
-    `;
-
-    const countQuerySpec = {
-      query: `
-        SELECT VALUE COUNT(1) FROM c 
-        ${whereClause}
-      `,
-      parameters: [
-        {
-          name: '@search',
-          value: search
-        }
-      ]
-    };
-
+  async findAll(): Promise<User[]> {
     const itemsQuerySpec = {
       query: `
         SELECT ${BASIC_FIELDS.join(',')},c.lovCount, c.baldoriaCount FROM c 
-        ${whereClause}
-        order by c.${sortBy} ${sort} 
-        offset @offset limit @limit
+        where c.role = @role
       `,
       parameters: [
         {
-          name: '@search',
-          value: search
-        },
-        {
-          name: '@offset',
-          value: offset
-        },
-        {
-          name: '@limit',
-          value: limit
+          name: '@role',
+          value: 'client'
         }
       ]
     };
 
-    const countPromise = this.userContainer.items
-      .query<number>(countQuerySpec)
-      .fetchAll();
-    const itemsPromise = this.userContainer.items
+    const { resources } = await this.userContainer.items
       .query<User>(itemsQuerySpec)
       .fetchAll();
 
-    const [items, count] = await Promise.all([itemsPromise, countPromise]);
-
-    const data = items.resources;
-    const total = count.resources[0];
-
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total
-      }
-    };
+    return resources;
   }
 
   async getClient(getClientDto: GetClientDto): Promise<Partial<User>> {
@@ -219,19 +164,17 @@ export class UsersService {
     return resources[0];
   }
 
-  async getReservations({ enterprise, from, to }: {
+  async getReservations({ enterprise, date }: {
     enterprise: Enterprise,
-    from: string,
-    to: string
+    date: string,
   }) {
-    const fromIso = new Date(from).toISOString();
-    const toIso = new Date(to).toISOString();
+    const dateIso = new Date(date).toISOString();
     const reservationQuerySpec = {
       query: `
         SELECT c as user
         FROM c 
         JOIN r in c.reservations 
-        where r.date >= @from and r.date <= @to and r.enterprise = @enterprise
+        where r.date >= @date and r.date <= @date and r.enterprise = @enterprise
       `,
       parameters: [
         {
@@ -239,12 +182,8 @@ export class UsersService {
           value: enterprise
         },
         {
-          name: "@from",
-          value: fromIso
-        },
-        {
-          name: "@to",
-          value: toIso
+          name: "@date",
+          value: dateIso
         }
       ],
     };
@@ -267,7 +206,7 @@ export class UsersService {
       return filteredReservationsWithUser;
     });
     console.log(reservations.length)
-    return reservations.filter(reservation => reservation.date.toString() >= fromIso && reservation.date.toString() <= toIso);
+    return reservations.filter(reservation => reservation.date.toString() >= dateIso && reservation.date.toString() <= dateIso);
   }
 
   async getReservationById(reservationId: string): Promise<Reservation | null> {

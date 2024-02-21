@@ -2,7 +2,8 @@ import { CosmosDateTime, CosmosPartitionKey } from '@nestjs/azure-database';
 
 export enum DocumentType {
     DNI = 'dni',
-    PASSPORT = 'passport',
+    PASSPORT = 'pasaporte',
+    CARNET_EXTRANJERIA = 'carnet_extranjeria'
 }
 
 export enum Role {

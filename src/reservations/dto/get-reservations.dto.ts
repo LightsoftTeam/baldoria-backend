@@ -8,14 +8,7 @@ export class GetReservationsDto {
     })
     @IsString()
     @IsNotEmpty()
-    from: string;
-
-    @ApiProperty({
-        example: '2024-03-31',
-    })
-    @IsString()
-    @IsNotEmpty()
-    to: string;
+    date: string;
 
     @ApiProperty({
         example: 'enterprise',

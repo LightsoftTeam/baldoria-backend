@@ -72,63 +72,7 @@
       "get": {
         "operationId": "UsersController_findAll",
         "summary": "Get all clients",
-        "parameters": [
-          {
-            "name": "page",
-            "required": true,
-            "in": "query",
-            "description": "Page number",
-            "example": 1,
-            "schema": {
-              "default": 1,
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "description": "Limit",
-            "example": 10,
-            "schema": {
-              "default": 10,
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "required": true,
-            "in": "query",
-            "description": "Search",
-            "example": "John",
-            "schema": {
-              "default": "",
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortBy",
-            "required": true,
-            "in": "query",
-            "description": "Sort",
-            "example": "asc",
-            "schema": {
-              "default": "asc",
-              "type": "string"
-            }
-          },
-          {
-            "name": "sort",
-            "required": true,
-            "in": "query",
-            "description": "Sort by",
-            "example": "name",
-            "schema": {
-              "default": "name",
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "The clients have been successfully retrieved."
@@ -153,7 +97,8 @@
             "schema": {
               "enum": [
                 "dni",
-                "passport"
+                "pasaporte",
+                "carnet_extranjeria"
               ],
               "type": "string"
             }
@@ -250,19 +195,10 @@
         "summary": "Get reservations by enterprise and dates range",
         "parameters": [
           {
-            "name": "from",
+            "name": "date",
             "required": true,
             "in": "query",
             "example": "2024-03-01",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": true,
-            "in": "query",
-            "example": "2024-03-31",
             "schema": {
               "type": "string"
             }
@@ -422,7 +358,8 @@
             "type": "string",
             "enum": [
               "dni",
-              "passport"
+              "pasaporte",
+              "carnet_extranjeria"
             ],
             "example": "dni",
             "description": "Document type of client"
