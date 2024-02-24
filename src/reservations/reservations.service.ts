@@ -91,7 +91,7 @@ export class ReservationsService {
     };
   }
 
-  async getStringDateFromUtcIso(isoDate: string) {
+  getStringDateFromUtcIso(isoDate: string) {
     const peruDate = DateTime.fromISO(isoDate, {zone: 'utc'}).toFormat('dd/MM/yyyy');
     this.logger.debug(`getStringDateFromUtcIso - isoDate: ${isoDate}, formattedDate: ${peruDate}`);
     return peruDate;
