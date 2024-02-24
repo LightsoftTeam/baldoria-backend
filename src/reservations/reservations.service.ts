@@ -58,6 +58,7 @@ export class ReservationsService {
     }
     const usedAt = reservation.usedAt;
     if(usedAt){
+      this.logger.debug(`getRevervationStatus - reservation was used at: ${usedAt}`);
       return {
         isValid: false,
         error: {
@@ -74,6 +75,7 @@ export class ReservationsService {
     .setZone('utc')
     .minus({hours: 5})
     .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+    this.logger.debug(`getRevervationStatus - comparing reservationInDate: ${reservationDateLuxon}, todayLuxon: ${todayLuxon}`);
     const reservationInDate = !(reservationDateLuxon < todayLuxon || reservationDateLuxon > todayLuxon);
     console.log({reservationInDate})
     if(!reservationInDate){

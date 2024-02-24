@@ -6,6 +6,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { ReservationsModule } from './reservations/reservations.module';
 import { AzureCosmosDbModule } from '@nestjs/azure-database';
 import { CommonModule } from './common/common.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ErrorInterceptor } from './request-error.interceptor';
 
 @ApiTags('App')
 @Module({
@@ -25,6 +27,12 @@ import { CommonModule } from './common/common.module';
       inject: [ConfigService],
     }),
     CommonModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ErrorInterceptor,
+    },
   ]
 })
 export class AppModule {}
