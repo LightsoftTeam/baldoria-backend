@@ -6,8 +6,6 @@ import type { Container } from '@azure/cosmos';
 import { Enterprise, Reservation, Role, User } from './entities/user.entity';
 import { GetClientDto } from './dto/get-client.dto';
 import { DateTime } from 'luxon';
-import { GetUsersDto, SortBy } from './dto/get-users.dto';
-import { Sort } from 'src/common/interfaces/sort.enum';
 import { AddReservationDto } from './dto/add-reservation.dto';
 import { DocumentFormat } from 'src/common/helpers/document-format.helper';
 import { ApplicationLoggerService } from 'src/common/services/application-logger.service';
@@ -258,8 +256,12 @@ export class UsersService {
     }
     const user = resources[0];
     const existReservation = user.reservations.find((reservation: Reservation) => {
-      return reservation.date.toString().split('T')[0] === date && reservation.enterprise === enterprise;
+      const dateBd = reservation.date.toString().split('T')[0];
+      const enterpriseBd = reservation.enterprise;
+      this.logger.debug(`dateBd ${dateBd} date ${date} enterpriseBd ${enterpriseBd} enterprise ${enterprise}`);
+      return dateBd === date && enterpriseBd === enterprise;
     });
+    this.logger.debug(`existReservation ${JSON.stringify(existReservation)}`);
     if (!existReservation) {
       const newReservation = await this.addReservationToUser(userId, addReservationDto);
       return {

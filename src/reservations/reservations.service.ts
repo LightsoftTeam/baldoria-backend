@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { GetReservationsDto } from './dto/get-reservations.dto';
-import { Reservation } from 'src/users/entities/user.entity';
-import { UseReservationError, useReservationErrors } from './constants/use-reservation-errors';
+import { useReservationErrors } from './constants/use-reservation-errors';
 import { DateTime } from 'luxon';
 import { ErrorApp } from 'src/common/interfaces/error-app.interface';
 import { DocumentFormat } from 'src/common/helpers/document-format.helper';
@@ -63,7 +62,7 @@ export class ReservationsService {
         isValid: false,
         error: {
           ...useReservationErrors.ALREADY_USED,
-          message: 'La reserva fue usada el día ' + usedAt
+          message: 'La reserva fue usada el día ' + this.getStringDateFromUtcIso(usedAt.toString())
         }
       };
     }
@@ -82,7 +81,7 @@ export class ReservationsService {
         isValid: false,
         error: {
           ...useReservationErrors.DATE_NOT_VALID,
-          message: 'La fecha de la reserva es ' + reservationDate
+          message: 'La fecha de la reserva es ' + this.getStringDateFromUtcIso(reservationDate)
         }
       };
     }
@@ -90,5 +89,11 @@ export class ReservationsService {
       isValid: true,
       error: null
     };
+  }
+
+  async getStringDateFromUtcIso(isoDate: string) {
+    const peruDate = DateTime.fromISO(isoDate, {zone: 'utc'}).toFormat('dd/MM/yyyy');
+    this.logger.debug(`getStringDateFromUtcIso - isoDate: ${isoDate}, formattedDate: ${peruDate}`);
+    return peruDate;
   }
 }

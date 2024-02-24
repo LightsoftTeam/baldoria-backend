@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from "class-validator";
 import { Enterprise } from "../entities/user.entity";
 
 export class AddReservationDto {
@@ -20,6 +20,7 @@ export class AddReservationDto {
         example: "2021-10-10",
     })
     @IsString()
+    @Matches(/^\d{4}-\d{2}-\d{2}$/)
     @IsNotEmpty()
     date: string;
 }
