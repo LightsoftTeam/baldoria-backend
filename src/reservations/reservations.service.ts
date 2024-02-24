@@ -62,7 +62,7 @@ export class ReservationsService {
         isValid: false,
         error: {
           ...useReservationErrors.ALREADY_USED,
-          message: 'La reserva fue usada el día ' + this.getStringDateFromUtcIso(usedAt.toString())
+          message: 'La reserva fue usada el día ' + this.getStringDateFromUtcIso({isoDate: usedAt.toString(), withHour: true})
         }
       };
     }
@@ -81,7 +81,7 @@ export class ReservationsService {
         isValid: false,
         error: {
           ...useReservationErrors.DATE_NOT_VALID,
-          message: 'La fecha de la reserva es ' + this.getStringDateFromUtcIso(reservationDate)
+          message: 'La fecha de la reserva es ' + this.getStringDateFromUtcIso({isoDate: reservationDate})
         }
       };
     }
@@ -91,8 +91,8 @@ export class ReservationsService {
     };
   }
 
-  getStringDateFromUtcIso(isoDate: string) {
-    const peruDate = DateTime.fromISO(isoDate, {zone: 'utc'}).toFormat('dd/MM/yyyy');
+  getStringDateFromUtcIso({isoDate, withHour = false}: {isoDate: string, withHour?: boolean}) {
+    const peruDate = DateTime.fromISO(isoDate, {zone: 'utc'}).toFormat(`dd/MM/yyyy${withHour ? ' HH:mm' : ''}`);
     this.logger.debug(`getStringDateFromUtcIso - isoDate: ${isoDate}, formattedDate: ${peruDate}`);
     return peruDate;
   }

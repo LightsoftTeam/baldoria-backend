@@ -300,7 +300,8 @@ export class UsersService {
 
   async useReservation(reservationId: string) {
     this.logger.debug(`useReservation ${reservationId}`);
-    const usedAt = DateTime.local().minus({ hours: 5 }).toJSDate();
+    const usedAt = DateTime.utc().minus({hours: 5}).toJSDate();
+    this.logger.debug(`usedAt ${usedAt}`);
     const user = await this.getUserByReservationId(reservationId);
     const newReservations = user.reservations.map(reservation => {
       if (reservation.id === reservationId) {
