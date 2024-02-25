@@ -5,19 +5,22 @@ import { ApplicationLoggerService } from './common/services/application-logger.s
 
 @Injectable()
 export class ErrorInterceptor implements NestInterceptor {
-  constructor(private readonly logger: ApplicationLoggerService) {}
+    constructor(private readonly logger: ApplicationLoggerService) { }
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    return next.handle().pipe(
-      catchError(error => {
-        // Verificar si el error es una excepción relacionada con la validación del DTO
-        if (error instanceof HttpException && ((error as any).status === 400)) {
-          // Loggear el error utilizando el servicio de logger personalizado
-          this.logger.log(`error in dto: ${(error.getResponse() as any).message}`);
-        }
-        // Propagar el error
-        return throwError(() => error);
-      }),
-    );
-  }
+    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+        return next.handle().pipe(
+            catchError(error => {
+                // Verificar si el error es una excepción relacionada con la validación del DTO
+                if (error instanceof HttpException && ((error as any).status === 400)) {
+                    const request = context.switchToHttp().getRequest();
+                    const { body } = request;
+                    this.logger.log(`error in dto: ${JSON.stringify(body)}`);
+                    // Loggear el error utilizando el servicio de logger personalizado
+                    this.logger.log(`error in dto: ${(error.getResponse() as any).message}`);
+                }
+                // Propagar el error
+                return throwError(() => error);
+            }),
+        );
+    }
 }
