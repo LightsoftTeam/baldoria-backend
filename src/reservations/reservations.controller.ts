@@ -5,6 +5,7 @@ import { GetReservationsDto } from './dto/get-reservations.dto';
 import { UseReservationDto } from './dto/use-reservation.dto';
 import { UseReservationError, useReservationErrors } from './constants/use-reservation-errors';
 import { DateTime } from 'luxon';
+import { GetVisitsDto } from './dto/get-visits.dto';
 
 @ApiTags('Reservations')
 @Controller('reservations')
@@ -20,8 +21,8 @@ export class ReservationsController {
   }
 
   @Get('visits')
-  getUserVisitsInRangeTime(@Query() dto: any) {
-    return this.reservationsService.getUserVisitsInDateRange(dto);
+  getUserVisitsInRangeTime(@Query() getVisitsDto: GetVisitsDto) {
+    return this.reservationsService.getUserVisitsInDateRange(getVisitsDto);
   }
 
   @HttpCode(HttpStatus.OK)

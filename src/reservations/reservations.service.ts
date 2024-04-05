@@ -6,6 +6,7 @@ import { DateTime } from 'luxon';
 import { ErrorApp } from 'src/common/interfaces/error-app.interface';
 import { DocumentFormat } from 'src/common/helpers/document-format.helper';
 import { ApplicationLoggerService } from 'src/common/services/application-logger.service';
+import { GetVisitsDto } from './dto/get-visits.dto';
 
 @Injectable()
 export class ReservationsService {
@@ -19,9 +20,9 @@ export class ReservationsService {
     return this.userService.getReservations(getReservationsDto);
   }
 
-  getUserVisitsInDateRange(dto: any) {
+  getUserVisitsInDateRange(getVisitsDto: GetVisitsDto) {
     this.logger.log('Finding reservations in date range');
-    return this.userService.getUsersWithVisits(dto);
+    return this.userService.getUsersWithVisits(getVisitsDto);
   }
 
   // async findOne(id: string): Promise<Reservation | null> {
