@@ -167,12 +167,15 @@ export class UsersService {
     date: string,
   }) {
     const dateIso = new Date(date).toISOString();
+    this.logger.debug(`getReservations enterprise ${enterprise} date ${dateIso}`);
     const reservationQuerySpec = {
       query: `
-        SELECT c as user
-        FROM c 
-        JOIN r in c.reservations 
-        where r.date >= @date and r.date <= @date and r.enterprise = @enterprise
+        SELECT ${BASIC_FIELDS.join(',')}, 
+        ARRAY (
+          SELECT * 
+          FROM r IN c.reservations 
+          WHERE r.date >= @date and r.date <= @date AND r.enterprise = @enterprise
+        ) as reservations FROM c
       `,
       parameters: [
         {
@@ -185,26 +188,71 @@ export class UsersService {
         }
       ],
     };
-    const { resources } = await this.userContainer.items.query<{
-      "user": User,
-    }>(
-      reservationQuerySpec
-    ).fetchAll();
-
-    const users = resources.map(resource => resource.user);
-    const reservations = users.flatMap(({ reservations, ...user }) => {
-      const filteredReservations = reservations.filter(reservation => reservation.enterprise === enterprise);
-      const filteredReservationsWithUser = filteredReservations.map(reservation => {
-        return {
-          ...reservation,
-          user: DocumentFormat.cleanDocument(user, ['password']),
-        }
+    const startDate = new Date();
+    const { resources } = await this.userContainer.items.query<User>(reservationQuerySpec).fetchAll();
+    const endDate = new Date();
+    this.logger.log(`getReservations query time ${endDate.getTime() - startDate.getTime()} ms`);
+    const response = resources.map(({reservations, ...user}) => {
+      if (reservations.length === 0) {
+        return null;
       }
-      );
-      return filteredReservationsWithUser;
+      if(reservations.length > 1){
+        this.logger.error('More than one reservation found');
+      }
+      const reservation = reservations[0];
+      return {
+        ...reservation,
+        user
+      }
     });
-    console.log(reservations.length)
-    return reservations.filter(reservation => reservation.date.toString() >= dateIso && reservation.date.toString() <= dateIso);
+    return response.filter(Boolean);
+  }
+
+  async getUsersWithVisits({ from, to }: {
+    from: string,
+    to: string,
+  }) {
+    const fromIso = new Date(from).toISOString();
+    const toIso = new Date(to).toISOString();
+    this.logger.debug(`getReservations from ${fromIso} to ${toIso}`);
+    const reservationQuerySpec = {
+      query: `
+        SELECT ${BASIC_FIELDS.join(',')}, 
+        ARRAY (
+          SELECT * 
+          FROM r IN c.reservations 
+          WHERE r.date >= @from and r.date <= @to
+        ) as reservations FROM c
+      `,
+      parameters: [
+        {
+          name: "@from",
+          value: fromIso
+        },
+        {
+          name: "@to",
+          value: toIso
+        }
+      ],
+    };
+    const startDate = new Date();
+    const { resources } = await this.userContainer.items.query<User>(reservationQuerySpec).fetchAll();
+    const endDate = new Date();
+    this.logger.log(`getUsersWithReservations query time ${endDate.getTime() - startDate.getTime()} ms`);
+    const response = resources.map(({reservations, ...user}) => {
+      const baldoriaReservations = reservations.filter(reservation => reservation.enterprise === Enterprise.BALDORIA);
+      const lovReservations = reservations.filter(reservation => reservation.enterprise === Enterprise.LOV);
+      const usedBaldoriaReservations = baldoriaReservations.filter(reservation => reservation.usedAt);
+      const usedLovReservations = lovReservations.filter(reservation => reservation.usedAt);
+      return {
+        ...user,
+        baldoriaReservations: baldoriaReservations.length,
+        lovReservations: lovReservations.length,
+        usedBaldoriaReservations: usedBaldoriaReservations.length,
+        usedLovReservations: usedLovReservations.length
+      }
+    });
+    return response;
   }
 
   async getReservationById(reservationId: string): Promise<Reservation | null> {

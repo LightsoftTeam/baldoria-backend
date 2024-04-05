@@ -15,10 +15,13 @@ export class ReservationsService {
   ) { }
 
   async findAll(getReservationsDto: GetReservationsDto) {
-    this.logger.log('Getting reservations');
-    const { date, enterprise } = getReservationsDto;
     this.logger.log(`getReservationsDto ${JSON.stringify(getReservationsDto)}`);
-    return this.userService.getReservations({date, enterprise});
+    return this.userService.getReservations(getReservationsDto);
+  }
+
+  getUserVisitsInDateRange(dto: any) {
+    this.logger.log('Finding reservations in date range');
+    return this.userService.getUsersWithVisits(dto);
   }
 
   // async findOne(id: string): Promise<Reservation | null> {

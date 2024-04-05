@@ -19,6 +19,11 @@ export class ReservationsController {
     return this.reservationsService.findAll(getReservationsDto);
   }
 
+  @Get('visits')
+  getUserVisitsInRangeTime(@Query() dto: any) {
+    return this.reservationsService.getUserVisitsInDateRange(dto);
+  }
+
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Use Reservation' })
   @ApiOkResponse({ description: 'The reservation has been successfully used.' })

@@ -227,6 +227,20 @@
         ]
       }
     },
+    "/api/reservations/visits": {
+      "get": {
+        "operationId": "ReservationsController_getUserVisitsInRangeTime",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reservations"
+        ]
+      }
+    },
     "/api/reservations/use": {
       "post": {
         "operationId": "ReservationsController_use",
@@ -306,6 +320,20 @@
           },
           "404": {
             "description": "Reservation not found."
+          }
+        },
+        "tags": [
+          "Reservations"
+        ]
+      }
+    },
+    "/api/reservations/xml-twiml": {
+      "get": {
+        "operationId": "ReservationsController_serveXmlTwiml",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
           }
         },
         "tags": [
