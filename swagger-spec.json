@@ -230,7 +230,26 @@
     "/api/reservations/visits": {
       "get": {
         "operationId": "ReservationsController_getUserVisitsInRangeTime",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "example": "2024-03-01",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "example": "2024-03-01",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""

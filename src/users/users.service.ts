@@ -223,6 +223,7 @@ export class UsersService {
           FROM r IN c.reservations 
           WHERE r.date >= @from and r.date <= @to
         ) as reservations FROM c
+        WHERE c.role = 'client'
       `,
       parameters: [
         {
